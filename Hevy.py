@@ -17,20 +17,17 @@ class Hevy:
 
         return response.json()
 
-    #def create_workout(self, data):
-    #    return requests.post(f"{self.BASE_URL}/workouts", headers=self.headers, json=data).json()
+    def get_workout_by_id(self, workout_id):
+        response = requests.get(f"{self.BASE_URL}/workouts/{workout_id}", headers=self.headers)
+        response.raise_for_status()
 
-    def get_workouts_count(self):
-        return requests.get(f"{self.BASE_URL}/workouts/count", headers=self.headers).json()
+        return response.json()
 
-    #def get_workout_events(self, params=None):
-    #    return requests.get(f"{self.BASE_URL}/workouts/events", headers=self.headers, params=params).json()
-
-    def get_workout(self, workout_id):
-        return requests.get(f"{self.BASE_URL}/workouts/{workout_id}", headers=self.headers).json()
-
-    #def update_workout(self, workout_id, data):
-    #    return requests.put(f"{self.BASE_URL}/workouts/{workout_id}", headers=self.headers, json=data).json()
+    def get_workouts_count(self) -> str:
+        response = requests.get(f"{self.BASE_URL}/workouts/count", headers=self.headers)
+        response.raise_for_status()
+        count = response.json()["workout_count"]
+        return count
 
     # ---------- ROUTINES ----------
     def get_routines(self, page: int = 1, page_size: int = 5):
@@ -40,42 +37,39 @@ class Hevy:
 
         return response.json()
 
-    #def create_routine(self, data):
-    #    return requests.post(f"{self.BASE_URL}/routines", headers=self.headers, json=data).json()
+    def get_routine_by_id(self, routine_id):
+        response = requests.get(f"{self.BASE_URL}/routines/{routine_id}", headers=self.headers)
+        response.raise_for_status()
 
-    def get_routine(self, routine_id):
-        return requests.get(f"{self.BASE_URL}/routines/{routine_id}", headers=self.headers).json()
-
-    #def update_routine(self, routine_id, data):
-    #    return requests.put(f"{self.BASE_URL}/routines/{routine_id}", headers=self.headers, json=data).json()
+        return response.json()
 
     # ---------- EXERCISE TEMPLATES ----------
     def get_exercise_templates(self, page=1, page_size=5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/exercise_templates", headers=self.headers, params=params).json()
+        response = requests.get(f"{self.BASE_URL}/exercise_templates", headers=self.headers, params=params)
         response.raise_for_status()
 
-        return response
+        return response.json()
 
-    #def create_exercise_template(self, data):
-    #    return requests.post(f"{self.BASE_URL}/exercise_templates", headers=self.headers, json=data).json()
+    def get_exercise_template_by_id(self, template_id):
+        response = requests.get(f"{self.BASE_URL}/exercise_templates/{template_id}", headers=self.headers)
+        response.raise_for_status()
 
-    def get_exercise_template(self, template_id):
-        return requests.get(f"{self.BASE_URL}/exercise_templates/{template_id}", headers=self.headers).json()
+        return response.json()
 
     # ---------- ROUTINE FOLDERS ----------
     def get_routine_folders(self, page=1, page_size=5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/routine_folders", headers=self.headers, params=params).json()
+        response = requests.get(f"{self.BASE_URL}/routine_folders", headers=self.headers, params=params)
         response.raise_for_status()
 
-        return response
+        return response.json()
 
-    #def create_routine_folder(self, data):
-    #    return requests.post(f"{self.BASE_URL}/routine_folders", headers=self.headers, json=data).json()
+    def get_routine_folder_by_id(self, folder_id):
+        response = requests.get(f"{self.BASE_URL}/routine_folders/{folder_id}", headers=self.headers)
+        response.raise_for_status()
 
-    def get_routine_folder(self, folder_id):
-        return requests.get(f"{self.BASE_URL}/routine_folders/{folder_id}", headers=self.headers).json()
+        return response.json()
 
     # ---------- WEBHOOK SUBSCRIPTION ----------
     #def create_webhook_subscription(self, data):
