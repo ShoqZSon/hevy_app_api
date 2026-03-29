@@ -1,13 +1,20 @@
+import json
+import math
+import os
+from pathlib import Path
+
 import requests
+from difflib import get_close_matches
 
 class Hevy:
     BASE_URL = "https://api.hevyapp.com/v1"
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, project_path: Path):
         self.headers = {
             "api-key": api_key,
             "Content-Type": "application/json"
         }
+        self.project_path = project_path
 
     # ---------- WORKOUTS ----------
     def get_workouts(self, page: int = 1, page_size: int = 5):
@@ -93,3 +100,57 @@ class Hevy:
         response.raise_for_status()
 
         return response
+
+    # ---------- Get complete data ----------
+    def write_all_current_plans(self) -> None:
+        """
+        Returns all routines within in their respective folders.
+        Specifically returns the routines (strength upper/lower, athletic upper/lower etc. in Off-Season etc.).
+
+        Return Type: Json
+        """
+        if not os.path.exists("plans.json"):
+            # Get only 1 routine item to calculate the page_count
+            routines = self.get_routines(page=1, page_size=1)
+            page_count = math.ceil(routines["page_count"] / 10)
+            routines["routines"] = []
+
+            # Extract all routines
+            for i in range(1, page_count + 1):
+                routines_tmp = self.get_routines(page=i, page_size=10)
+                routines["routines"].extend(routines_tmp["routines"])
+
+            # Get all routine folders (Off-Season, Pre-Season, In-Season, Deload)
+            folders = self.get_routine_folders(page=1, page_size=10)
+
+            # Match routines to their respective folders
+            for folder in folders["routine_folders"]:
+                folder["routines"] = [r for r in routines["routines"] if r["folder_id"] == folder["id"]]
+
+            path_to_plans = self.project_path / "plans" / "plans.json"
+            with open(path_to_plans, "w") as f:
+                json.dump(folders, f, indent=4)
+
+    def write_specific_plan(self, plan_name: str):
+        if not os.path.exists("plans.json"):
+            self.write_all_current_plans()
+
+        with open("plans.json", "r") as f:
+            plans = json.load(f)
+
+        folders = plans["routine_folders"]
+        plan_lower = plan_name.lower()
+
+        # Compare only against the short prefix before ":"
+        short_titles = [f["title"].split(":")[0].lower() for f in folders]
+        matches = get_close_matches(plan_lower, short_titles, n=1, cutoff=0.3)
+
+        if not matches:
+            titles = [f["title"] for f in folders]
+            raise ValueError(f"No plan found matching '{plan_name}'. Available plans: {titles}")
+
+        matched_folder = folders[short_titles.index(matches[0])]
+
+        path_to_specific_plan = self.project_path / "plans" / f"{plan_name}.json"
+        with open(path_to_specific_plan, "w") as f:
+            json.dump(matched_folder, f, indent=4)
