@@ -1,12 +1,11 @@
 import os
-
 from Hevy import Hevy
 from utils import *
 
 PROJECT_PATH = Path.cwd()
+
 CONFIG_PATH = PROJECT_PATH / "config.toml"
 config = read_toml(CONFIG_PATH)
-
 plan_folder = PROJECT_PATH / "plans"
 
 if not plan_folder.exists():
