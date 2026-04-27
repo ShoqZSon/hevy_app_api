@@ -15,6 +15,7 @@ class Hevy:
             "Content-Type": "application/json"
         }
         self.project_path = project_path
+        self.plans_path = project_path / "plans"
 
     # ---------- WORKOUTS ----------
     def get_workouts(self, page: int = 1, page_size: int = 5):
@@ -109,33 +110,32 @@ class Hevy:
 
         Return Type: Json
         """
-        if not os.path.exists("plans.json"):
-            # Get only 1 routine item to calculate the page_count
-            routines = self.get_routines(page=1, page_size=1)
-            page_count = math.ceil(routines["page_count"] / 10)
-            routines["routines"] = []
+        plans_json = self.plans_path / "plans.json"
+        # Get only 1 routine item to calculate the page_count
+        routines = self.get_routines(page=1, page_size=1)
+        page_count = math.ceil(routines["page_count"] / 10)
+        routines["routines"] = []
 
-            # Extract all routines
-            for i in range(1, page_count + 1):
-                routines_tmp = self.get_routines(page=i, page_size=10)
-                routines["routines"].extend(routines_tmp["routines"])
+        # Extract all routines
+        for i in range(1, page_count + 1):
+            routines_tmp = self.get_routines(page=i, page_size=10)
+            routines["routines"].extend(routines_tmp["routines"])
 
-            # Get all routine folders (Off-Season, Pre-Season, In-Season, Deload)
-            folders = self.get_routine_folders(page=1, page_size=10)
+        # Get all routine folders (Off-Season, Pre-Season, In-Season, Deload)
+        folders = self.get_routine_folders(page=1, page_size=10)
 
-            # Match routines to their respective folders
-            for folder in folders["routine_folders"]:
-                folder["routines"] = [r for r in routines["routines"] if r["folder_id"] == folder["id"]]
+        # Match routines to their respective folders
+        for folder in folders["routine_folders"]:
+            folder["routines"] = [r for r in routines["routines"] if r["folder_id"] == folder["id"]]
 
-            path_to_plans = self.project_path / "plans" / "plans.json"
-            with open(path_to_plans, "w") as f:
-                json.dump(folders, f, indent=4)
+        with open(plans_json, "w") as f:
+            json.dump(folders, f, indent=4)
 
     def write_specific_plan(self, plan_name: str):
-        if not os.path.exists("plans.json"):
-            self.write_all_current_plans()
+        plans_json = self.plans_path / "plans.json"
+        self.write_all_current_plans()
 
-        with open("plans.json", "r") as f:
+        with open(plans_json, "r") as f:
             plans = json.load(f)
 
         folders = plans["routine_folders"]
@@ -151,6 +151,6 @@ class Hevy:
 
         matched_folder = folders[short_titles.index(matches[0])]
 
-        path_to_specific_plan = self.project_path / "plans" / f"{plan_name}.json"
+        path_to_specific_plan = self.plans_path / f"{plan_name}.json"
         with open(path_to_specific_plan, "w") as f:
             json.dump(matched_folder, f, indent=4)
