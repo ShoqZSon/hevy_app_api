@@ -1,38 +1,47 @@
 import json
 import math
 import os
-from pathlib import Path
-
 import requests
+from pathlib import Path
+from dotenv import load_dotenv
 from difflib import get_close_matches
 
 class Hevy:
-    BASE_URL = "https://api.hevyapp.com/v1"
+    def __init__(self):
+        load_dotenv()
+        API_KEY = os.getenv("API_KEY")
+        self.BASE_URL = os.getenv("BASE_URL")
 
-    def __init__(self, api_key: str, project_path: Path):
-        self.headers = {
-            "api-key": api_key,
+        if not API_KEY or not self.BASE_URL:
+            raise EnvironmentError
+
+        project_path = Path.cwd()
+        self.plans_path = project_path / "plans"
+
+        self._headers = {
+            "api-key": API_KEY,
             "Content-Type": "application/json"
         }
-        self.project_path = project_path
-        self.plans_path = project_path / "plans"
+
+    def get_headers(self):
+        return self._headers
 
     # ---------- WORKOUTS ----------
     def get_workouts(self, page: int = 1, page_size: int = 5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/workouts", headers=self.headers, params=params)
+        response = requests.get(f"{self.BASE_URL}/workouts", headers=self.get_headers(), params=params)
         response.raise_for_status()
 
         return response.json()
 
     def get_workout_by_id(self, workout_id):
-        response = requests.get(f"{self.BASE_URL}/workouts/{workout_id}", headers=self.headers)
+        response = requests.get(f"{self.BASE_URL}/workouts/{workout_id}", headers=self.get_headers())
         response.raise_for_status()
 
         return response.json()
 
     def get_workouts_count(self) -> str:
-        response = requests.get(f"{self.BASE_URL}/workouts/count", headers=self.headers)
+        response = requests.get(f"{self.BASE_URL}/workouts/count", headers=self.get_headers())
         response.raise_for_status()
         count = response.json()["workout_count"]
         return count
@@ -40,13 +49,13 @@ class Hevy:
     # ---------- ROUTINES ----------
     def get_routines(self, page: int = 1, page_size: int = 5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/routines", headers=self.headers, params=params)
+        response = requests.get(f"{self.BASE_URL}/routines", headers=self.get_headers(), params=params)
         response.raise_for_status()
 
         return response.json()
 
     def get_routine_by_id(self, routine_id):
-        response = requests.get(f"{self.BASE_URL}/routines/{routine_id}", headers=self.headers)
+        response = requests.get(f"{self.BASE_URL}/routines/{routine_id}", headers=self.get_headers())
         response.raise_for_status()
 
         return response.json()
@@ -54,13 +63,13 @@ class Hevy:
     # ---------- EXERCISE TEMPLATES ----------
     def get_exercise_templates(self, page=1, page_size=5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/exercise_templates", headers=self.headers, params=params)
+        response = requests.get(f"{self.BASE_URL}/exercise_templates", headers=self.get_headers(), params=params)
         response.raise_for_status()
 
         return response.json()
 
     def get_exercise_template_by_id(self, template_id):
-        response = requests.get(f"{self.BASE_URL}/exercise_templates/{template_id}", headers=self.headers)
+        response = requests.get(f"{self.BASE_URL}/exercise_templates/{template_id}", headers=self.get_headers())
         response.raise_for_status()
 
         return response.json()
@@ -68,36 +77,36 @@ class Hevy:
     # ---------- ROUTINE FOLDERS ----------
     def get_routine_folders(self, page=1, page_size=5):
         params = {"page": page, "pageSize": page_size}
-        response = requests.get(f"{self.BASE_URL}/routine_folders", headers=self.headers, params=params)
+        response = requests.get(f"{self.BASE_URL}/routine_folders", headers=self.get_headers(), params=params)
         response.raise_for_status()
 
         return response.json()
 
     def get_routine_folder_by_id(self, folder_id):
-        response = requests.get(f"{self.BASE_URL}/routine_folders/{folder_id}", headers=self.headers)
+        response = requests.get(f"{self.BASE_URL}/routine_folders/{folder_id}", headers=self.get_headers())
         response.raise_for_status()
 
         return response.json()
 
     # ---------- WEBHOOK SUBSCRIPTION ----------
     #def create_webhook_subscription(self, data):
-    #    return requests.post(f"{self.BASE_URL}/webhook-subscription", headers=self.headers, json=data).json()
+    #    return requests.post(f"{self.BASE_URL}/webhook-subscription", headers=self.get_headers(), json=data).json()
 
     #def delete_webhook_subscription(self):
-    #    return requests.delete(f"{self.BASE_URL}/webhook-subscription", headers=self.headers).json()
+    #    return requests.delete(f"{self.BASE_URL}/webhook-subscription", headers=self.get_headers()).json()
 
     #def get_webhook_subscription(self):
-    #    return requests.get(f"{self.BASE_URL}/webhook-subscription", headers=self.headers).json()
+    #    return requests.get(f"{self.BASE_URL}/webhook-subscription", headers=self.get_headers()).json()
 
     # ---------- EXERCISE HISTORY ----------
     def get_exercise_history_for(self, exercise_template_id, start_date=None, end_date=None):
         if start_date and end_date:
             params = {"exerciseTemplateId": exercise_template_id, "start_date": start_date, "end_date": end_date}
-        if not start_date and not end_date:
+        elif not start_date and not end_date:
             params = {"exerciseTemplateId": exercise_template_id}
         else:
             raise ValueError("start_date and end_date must be provided or neither at all.")
-        response = requests.get(f"{self.BASE_URL}/exercise_history", headers=self.headers, params=params).json()
+        response = requests.get(f"{self.BASE_URL}/exercise_history", headers=self.get_headers(), params=params).json()
         response.raise_for_status()
 
         return response
@@ -108,7 +117,7 @@ class Hevy:
         Returns all routines within in their respective folders.
         Specifically returns the routines (strength upper/lower, athletic upper/lower etc. in Off-Season etc.).
 
-        Return Type: Json
+        Return Type: JSON
         """
         plans_json = self.plans_path / "plans.json"
         # Get only 1 routine item to calculate the page_count

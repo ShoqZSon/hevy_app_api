@@ -1,23 +1,9 @@
-import os
 from Hevy import Hevy
-from utils import *
+from pathlib import Path
 
-PROJECT_PATH = Path.cwd()
+plan_folder = Path.cwd() / "plans"
 
-CONFIG_PATH = PROJECT_PATH / "config.toml"
-config = read_toml(CONFIG_PATH)
-plan_folder = PROJECT_PATH / "plans"
-
-if not plan_folder.exists():
-    os.mkdir(plan_folder)
-
-key_dict = config.get("Hevy_API_Key", {})
-api_key = key_dict.get("api_key")
-if api_key is None:
-    print("API key not found in config.toml")
-    exit(1)
-
-hevy = Hevy(api_key=api_key, project_path=PROJECT_PATH)
+hevy = Hevy()
 
 #workouts_count = hevy.get_workouts_count()
 #print(f"Workout Count: {workouts_count}")
